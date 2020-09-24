@@ -1,13 +1,20 @@
 package com.airbnb.android.react.lottie;
 
-import android.util.JsonReader;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.widget.ImageView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.airbnb.lottie.LottieDrawable;
-
-import java.io.StringReader;
+import com.airbnb.lottie.LottieProperty;
+import com.airbnb.lottie.RenderMode;
+import com.airbnb.lottie.SimpleColorFilter;
+import com.airbnb.lottie.model.KeyPath;
+import com.airbnb.lottie.value.LottieValueCallback;
+import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import java.lang.ref.WeakReference;
+import java.util.regex.Pattern;
 
 /**
  * Class responsible for applying the properties to the LottieView.
@@ -19,130 +26,143 @@ import java.lang.ref.WeakReference;
  */
 public class LottieAnimationViewPropertyManager {
 
-  private final WeakReference<LottieAnimationView> viewWeakReference;
+    private final WeakReference<LottieAnimationView> viewWeakReference;
 
-  private String animationJson;
-  private Float progress;
-  private Boolean loop;
-  private Float speed;
+    private String animationJson;
+    private Float progress;
+    private Boolean loop;
+    private Float speed;
 
-  /**
-   * Should be set to true if one of the animationName related parameters has changed as a result
-   * of last reconciliation. We need to update the animation in this case.
-   */
-  private boolean animationNameDirty;
+    /**
+     * Should be set to true if one of the animationName related parameters has changed as a result
+     * of last reconciliation. We need to update the animation in this case.
+     */
+    private boolean animationNameDirty;
 
-  private String animationName;
-  private LottieAnimationView.CacheStrategy cacheStrategy;
-  private Boolean useHardwareAcceleration;
-  private ImageView.ScaleType scaleType;
-  private String imageAssetsFolder;
-  private Boolean enableMergePaths;
+    private String animationName;
+    private ImageView.ScaleType scaleType;
+    private String imageAssetsFolder;
+    private Boolean enableMergePaths;
+    private ReadableArray colorFilters;
+    private RenderMode renderMode;
 
-  public LottieAnimationViewPropertyManager(LottieAnimationView view) {
-    this.viewWeakReference = new WeakReference<>(view);
-  }
-
-  public void setAnimationName(String animationName) {
-    this.animationName = animationName;
-    this.animationNameDirty = true;
-  }
-
-  public void setAnimationJson(String json) {
-    this.animationJson = json;
-  }
-
-  public void setCacheStrategy(LottieAnimationView.CacheStrategy strategy) {
-    this.cacheStrategy = strategy;
-    this.animationNameDirty = true;
-  }
-
-  public void setProgress(Float progress) {
-    this.progress = progress;
-  }
-
-  public void setSpeed(float speed) {
-    this.speed = speed;
-  }
-
-  public void setLoop(boolean loop) {
-    this.loop = loop;
-  }
-
-  public void setUseHardwareAcceleration(boolean useHardwareAcceleration) {
-    this.useHardwareAcceleration = useHardwareAcceleration;
-  }
-
-  public void setScaleType(ImageView.ScaleType scaleType) {
-    this.scaleType = scaleType;
-  }
-
-  public void setImageAssetsFolder(String imageAssetsFolder) {
-    this.imageAssetsFolder = imageAssetsFolder;
-  }
-
-  public void setEnableMergePaths(boolean enableMergePaths) {
-    this.enableMergePaths = enableMergePaths;
-  }
-
-  /**
-   * Updates the view with changed fields.
-   * Majority of the properties here are independent so they are has to be reset to null
-   * as soon as view is updated with the value.
-   *
-   * The only exception from this rule is the group of the properties for the animation.
-   * For now this is animationName and cacheStrategy. These two properties are should be set
-   * simultaneously if the dirty flag is set.
-   */
-  public void commitChanges() {
-    LottieAnimationView view = viewWeakReference.get();
-    if (view == null) {
-      return;
+    public LottieAnimationViewPropertyManager(LottieAnimationView view) {
+        this.viewWeakReference = new WeakReference<>(view);
     }
 
-    if (animationJson != null) {
-      view.setAnimation(new JsonReader(new StringReader(animationJson)));
-      animationJson = null;
+    public void setAnimationName(String animationName) {
+        this.animationName = animationName;
+        this.animationNameDirty = true;
     }
 
-    if (animationNameDirty) {
-      view.setAnimation(animationName, cacheStrategy);
-      animationNameDirty = false;
+    public void setAnimationJson(String json) {
+        this.animationJson = json;
     }
 
-    if (progress != null) {
-      view.setProgress(progress);
-      progress = null;
+    public void setProgress(Float progress) {
+        this.progress = progress;
     }
 
-    if (loop != null) {
-      view.setRepeatCount(loop ? LottieDrawable.INFINITE : 0);
-      loop = null;
+    public void setSpeed(float speed) {
+        this.speed = speed;
     }
 
-    if (speed != null) {
-      view.setSpeed(speed);
-      speed = null;
+    public void setLoop(boolean loop) {
+        this.loop = loop;
     }
 
-    if (useHardwareAcceleration != null) {
-      view.useHardwareAcceleration(useHardwareAcceleration);
-      useHardwareAcceleration = null;
+    public void setScaleType(ImageView.ScaleType scaleType) {
+        this.scaleType = scaleType;
     }
 
-    if (scaleType != null) {
-      view.setScaleType(scaleType);
-      scaleType = null;
+    public void setRenderMode(RenderMode renderMode) {
+        this.renderMode = renderMode;
     }
 
-    if (imageAssetsFolder != null) {
-      view.setImageAssetsFolder(imageAssetsFolder);
-      imageAssetsFolder = null;
+    public void setImageAssetsFolder(String imageAssetsFolder) {
+        this.imageAssetsFolder = imageAssetsFolder;
     }
 
-    if (enableMergePaths != null) {
-        view.enableMergePathsForKitKatAndAbove(enableMergePaths);
-        enableMergePaths = null;
+    public void setEnableMergePaths(boolean enableMergePaths) {
+        this.enableMergePaths = enableMergePaths;
     }
-  }
+
+    public void setColorFilters(ReadableArray colorFilters) {
+        this.colorFilters = colorFilters;
+    }
+
+    /**
+     * Updates the view with changed fields.
+     * Majority of the properties here are independent so they are has to be reset to null
+     * as soon as view is updated with the value.
+     *
+     * The only exception from this rule is the group of the properties for the animation.
+     * For now this is animationName and cacheStrategy. These two properties are should be set
+     * simultaneously if the dirty flag is set.
+     */
+    public void commitChanges() {
+        LottieAnimationView view = viewWeakReference.get();
+        if (view == null) {
+            return;
+        }
+
+        if (animationJson != null) {
+            view.setAnimationFromJson(animationJson, Integer.toString(animationJson.hashCode()));
+            animationJson = null;
+        }
+
+        if (animationNameDirty) {
+            view.setAnimation(animationName);
+            animationNameDirty = false;
+        }
+
+        if (progress != null) {
+            view.setProgress(progress);
+            progress = null;
+        }
+
+        if (loop != null) {
+            view.setRepeatCount(loop ? LottieDrawable.INFINITE : 0);
+            loop = null;
+        }
+
+        if (speed != null) {
+            view.setSpeed(speed);
+            speed = null;
+        }
+
+        if (scaleType != null) {
+            view.setScaleType(scaleType);
+            scaleType = null;
+        }
+
+        if (renderMode != null) {
+            view.setRenderMode(renderMode);
+            renderMode = null;
+        }
+
+        if (imageAssetsFolder != null) {
+            view.setImageAssetsFolder(imageAssetsFolder);
+            imageAssetsFolder = null;
+        }
+
+        if (enableMergePaths != null) {
+            view.enableMergePathsForKitKatAndAbove(enableMergePaths);
+            enableMergePaths = null;
+        }
+
+        if (colorFilters != null && colorFilters.size() > 0) {
+            for (int i = 0; i < colorFilters.size(); i++) {
+                ReadableMap current = colorFilters.getMap(i);
+                String color = current.getString("color");
+                String path = current.getString("keypath");
+                SimpleColorFilter colorFilter = new SimpleColorFilter(Color.parseColor(color));
+                String pathWithGlobstar = path + ".**";
+                String[] keys = pathWithGlobstar.split(Pattern.quote("."));
+                KeyPath keyPath = new KeyPath(keys);
+                LottieValueCallback<ColorFilter> callback = new LottieValueCallback<>(colorFilter);
+                view.addValueCallback(keyPath, LottieProperty.COLOR_FILTER, callback);
+            }
+        }
+    }
 }
